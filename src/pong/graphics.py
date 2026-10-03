@@ -8,6 +8,7 @@ BACKGROUND = 0
 INK = 7
 MUTED = 13
 ACCENT = 14
+TEXT = 6
 
 
 def configure_palette() -> None:
@@ -15,6 +16,7 @@ def configure_palette() -> None:
     pyxel.colors[INK] = 0xD6D5D1
     pyxel.colors[MUTED] = 0x747477
     pyxel.colors[ACCENT] = 0xFFA2AA
+    pyxel.colors[TEXT] = 0x98989D
     pyxel.colors[1] = 0x212124
     pyxel.colors[2] = 0x39393D
 
@@ -50,9 +52,9 @@ def centered(y: float, value: str, color: int = INK, scale: int = 2) -> None:
 def frame() -> None:
     # pyxel.rectb(10, 14, 280, 376, INK)
     pyxel.line(36, 40, 65, 40, INK)
-    pyxel.line(248, 40, 264, 40, INK)
+    pyxel.line(235, 40, 264, 40, INK)
     pyxel.line(36, 40, 36, 358, INK)
     pyxel.line(264, 40, 264, 358, INK)
     pyxel.line(36, 358, 264, 358, INK)
     text(76, 35, "Ping", scale=3)
-    text(193, 35, "Pong", scale=3)
+    text(180, 35, "Pong", scale=3)
