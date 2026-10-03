@@ -7,7 +7,7 @@ from pong.ai import PaddleAI
 from pong.graphics import BACKGROUND, INK, MUTED, centered, text
 from pong.model import Ball, Paddle
 from pong.physics import Rect, advance_ball
-from pong.settings import FPS, WIDTH, Difficulty, Settings
+from pong.settings import FPS, WIDTH, Difficulty, PADDLE_PROFILES, Settings
 
 COURT_LEFT = 22
 COURT_RIGHT = WIDTH - COURT_LEFT
@@ -15,7 +15,6 @@ COURT_TOP = 32
 COURT_BOTTOM = 358
 PADDLE_LENGTH = 70
 PADDLE_THICKNESS = 6
-PADDLE_SPEED = 180.0
 TOP_PADDLE_Y = COURT_TOP + 20
 BOTTOM_PADDLE_Y = COURT_BOTTOM - 20 - PADDLE_THICKNESS
 
@@ -37,8 +36,9 @@ class Match:
         self.rng = rng if rng is not None else Random()
         self.score = [0, 0]
         position = (WIDTH - PADDLE_LENGTH) / 2
-        self.bottom = Paddle(position, PADDLE_LENGTH, PADDLE_SPEED)
-        self.top = Paddle(position, PADDLE_LENGTH, PADDLE_SPEED)
+        motion = PADDLE_PROFILES[settings.difficulty]
+        self.bottom = Paddle(position, PADDLE_LENGTH, motion.speed, motion)
+        self.top = Paddle(position, PADDLE_LENGTH, motion.speed, motion)
         self.ai = PaddleAI(settings.difficulty, (COURT.left + COURT.right) / 2)
         if settings.players == 1:
             self.top.speed = self.ai.profile.speed

@@ -63,4 +63,9 @@ class PaddleAI:
         difference = target - (paddle.position + paddle.length / 2)
         dead_zone = max(2.0, paddle.speed * dt)
         direction = 0 if abs(difference) <= dead_zone else (1 if difference > 0 else -1)
+        if paddle.motion and paddle.motion.braking and difference * paddle.velocity > 0:
+            stopping_distance = paddle.velocity ** 2 / (2 * paddle.motion.braking)
+            stopping_distance += abs(paddle.velocity) * paddle.motion.input_delay
+            if abs(difference) <= stopping_distance + dead_zone:
+                direction = 0
         paddle.move(direction, dt, court.left, court.right)
