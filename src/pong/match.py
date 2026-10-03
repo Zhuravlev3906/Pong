@@ -3,6 +3,7 @@ from random import Random
 
 import pyxel
 
+from pong.ai import PaddleAI
 from pong.graphics import BACKGROUND, INK, MUTED, centered, text
 from pong.model import Ball, Paddle
 from pong.physics import Rect, advance_ball
@@ -38,6 +39,9 @@ class Match:
         position = (WIDTH - PADDLE_LENGTH) / 2
         self.bottom = Paddle(position, PADDLE_LENGTH, PADDLE_SPEED)
         self.top = Paddle(position, PADDLE_LENGTH, PADDLE_SPEED)
+        self.ai = PaddleAI(settings.difficulty, (COURT.left + COURT.right) / 2)
+        if settings.players == 1:
+            self.top.speed = self.ai.profile.speed
         self.serve()
 
     def serve(self) -> None:
@@ -51,6 +55,7 @@ class Match:
             BALL_RADIUS,
         )
         self.serve_remaining = SERVE_DELAY
+        self.ai.reset((COURT.left + COURT.right) / 2)
 
     def update_ball(self, dt: float) -> None:
         if self.serve_remaining > 0:
@@ -88,6 +93,9 @@ class Match:
         if self.settings.players == 2:
             top_direction = int(pyxel.btn(pyxel.KEY_RIGHT)) - int(pyxel.btn(pyxel.KEY_LEFT))
             self.top.move(top_direction, 1 / FPS, COURT_LEFT + 1, COURT_RIGHT)
+        else:
+            self.ai.update(self.top, self.ball, 1 / FPS, COURT,
+                           TOP_PADDLE_Y + PADDLE_THICKNESS, self.serve_remaining > 0)
         self.update_ball(1 / FPS)
 
     def draw(self) -> None:
@@ -101,7 +109,8 @@ class Match:
         pyxel.line(COURT_RIGHT, COURT_TOP, COURT_RIGHT, COURT_BOTTOM, INK)
         pyxel.line(COURT_LEFT, COURT_BOTTOM, COURT_RIGHT, COURT_BOTTOM, INK)
         text(64, COURT_TOP - 6, score_text)
-        text(64, COURT_TOP - 17, 'P1: BOTTOM / P2: TOP', MUTED, 1)
+        opponent = 'AI' if self.settings.players == 1 else 'P2'
+        text(64, COURT_TOP - 17, f'P1: BOTTOM / {opponent}: TOP', MUTED, 1)
 
         middle_y = (COURT_TOP + COURT_BOTTOM) // 2
         for x in range(COURT_LEFT + 10, COURT_RIGHT - 8, 10):
@@ -117,6 +126,6 @@ class Match:
         if self.settings.players == 2:
             centered(368, 'P1: A/D    P2: LEFT/RIGHT', MUTED, 1)
         else:
-            centered(368, 'P1: A/D    AI: COMING NEXT', MUTED, 1)
+            centered(368, f'P1: A/D    AI: {self.settings.difficulty.name}', MUTED, 1)
         centered(381, 'ESC: MENU    M: SOUND ' +
                  ('ON' if self.settings.sound_enabled else 'OFF'), MUTED, 1)
