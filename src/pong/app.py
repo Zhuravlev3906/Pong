@@ -49,8 +49,7 @@ class App:
         elif self.menu.update():
             self.match = Match(self.settings)
             self.in_match = True
-            for channel in range(3):
-                pyxel.stop(channel)
+            audio.start_music(self.settings.difficulty)
 
     def draw(self) -> None:
         if not self.in_match:

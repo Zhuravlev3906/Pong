@@ -6,7 +6,10 @@ import pyxel
 
 from pong.ai import PaddleAI
 from pong.effects import Effect, Effects
-from pong.graphics import ACCENT, BACKGROUND, INK, MUTED, centered, text
+from pong.graphics import (
+    ACCENT, BACKGROUND, BLOOD, DARK_BLOOD, HELL_BACKGROUND,
+    HELL_MUTED, HELL_TEXT, INK, MUTED, centered, text,
+)
 from pong.model import Ball, Paddle
 from pong.physics import Rect, advance_ball
 from pong.settings import FPS, HEIGHT, WIDTH, Difficulty, PADDLE_PROFILES, Settings
@@ -153,36 +156,42 @@ class Match:
         self.update_ball(1 / FPS)
 
     def draw(self) -> None:
-        pyxel.cls(BACKGROUND)
-        pyxel.line(COURT_LEFT, COURT_TOP, 53, COURT_TOP, INK)
+        extreme = self.settings.difficulty == Difficulty.EXTREME
+        background = HELL_BACKGROUND if extreme else BACKGROUND
+        field_color = BLOOD if extreme else INK
+        text_color = HELL_TEXT if extreme else INK
+        muted = HELL_MUTED if extreme else MUTED
+        divider = DARK_BLOOD if extreme else 2
+        pyxel.cls(background)
+        pyxel.line(COURT_LEFT, COURT_TOP, 53, COURT_TOP, field_color)
         score_text = f"Score {self.score[0]} : {self.score[1]}"
         score_end = 64 + (len(score_text) * 4 - 1) * 2 + 12
         if score_end < COURT_RIGHT:
-            pyxel.line(score_end, COURT_TOP, COURT_RIGHT, COURT_TOP, INK)
-        pyxel.line(COURT_LEFT, COURT_TOP, COURT_LEFT, COURT_BOTTOM, INK)
-        pyxel.line(COURT_RIGHT, COURT_TOP, COURT_RIGHT, COURT_BOTTOM, INK)
-        pyxel.line(COURT_LEFT, COURT_BOTTOM, COURT_RIGHT, COURT_BOTTOM, INK)
-        text(64, COURT_TOP - 6, score_text)
+            pyxel.line(score_end, COURT_TOP, COURT_RIGHT, COURT_TOP, field_color)
+        pyxel.line(COURT_LEFT, COURT_TOP, COURT_LEFT, COURT_BOTTOM, field_color)
+        pyxel.line(COURT_RIGHT, COURT_TOP, COURT_RIGHT, COURT_BOTTOM, field_color)
+        pyxel.line(COURT_LEFT, COURT_BOTTOM, COURT_RIGHT, COURT_BOTTOM, field_color)
+        text(64, COURT_TOP - 6, score_text, text_color)
         opponent = 'AI' if self.settings.players == 1 else 'P2'
-        text(64, COURT_TOP - 17, f'P1: BOTTOM / {opponent}: TOP', MUTED, 1)
+        text(64, COURT_TOP - 17, f'P1: BOTTOM / {opponent}: TOP', muted, 1)
 
         middle_y = (COURT_TOP + COURT_BOTTOM) // 2
         for x in range(COURT_LEFT + 10, COURT_RIGHT - 8, 10):
-            pyxel.rect(x, middle_y, 4, 1, 2)
+            pyxel.rect(x, middle_y, 4, 1, divider)
         pyxel.rect(round(self.top.position), TOP_PADDLE_Y,
-                   self.top.length, PADDLE_THICKNESS, INK)
+                   self.top.length, PADDLE_THICKNESS, field_color)
         pyxel.rect(round(self.bottom.position), BOTTOM_PADDLE_Y,
-                   self.bottom.length, PADDLE_THICKNESS, INK)
-        pyxel.circ(round(self.ball.x), round(self.ball.y), self.ball.radius, INK)
+                   self.bottom.length, PADDLE_THICKNESS, field_color)
+        pyxel.circ(round(self.ball.x), round(self.ball.y), self.ball.radius, field_color)
         if self.serve_remaining > 0:
-            centered(middle_y + 16, 'READY', MUTED, 1)
+            centered(middle_y + 16, 'READY', muted, 1)
 
         if self.settings.players == 2:
-            centered(368, 'P1: A/D    P2: LEFT/RIGHT', MUTED, 1)
+            centered(368, 'P1: A/D    P2: LEFT/RIGHT', muted, 1)
         else:
-            centered(368, f'P1: A/D    AI: {self.settings.difficulty.name}', MUTED, 1)
+            centered(368, f'P1: A/D    AI: {self.settings.difficulty.name}', muted, 1)
         centered(381, 'ESC: MENU    M: SOUND ' +
-                 ('ON' if self.settings.sound_enabled else 'OFF'), MUTED, 1)
+                 ('ON' if self.settings.sound_enabled else 'OFF'), muted, 1)
 
         for player, effect in enumerate(self.effects.active):
             if effect is None:
@@ -191,10 +200,10 @@ class Match:
             centered(label_y, f"P{player + 1}: {effect.kind.value} {ceil(effect.remaining)}s", ACCENT, 1)
             if effect.kind == Effect.BLOCK:
                 panel_y = 320 if player == 0 else 42
-                pyxel.rect(COURT_LEFT + 1, panel_y, COURT_RIGHT - COURT_LEFT - 1, 35, BACKGROUND)
+                pyxel.rect(COURT_LEFT + 1, panel_y, COURT_RIGHT - COURT_LEFT - 1, 35, background)
                 pyxel.rectb(COURT_LEFT + 1, panel_y, COURT_RIGHT - COURT_LEFT - 1, 35, ACCENT)
                 message = 'AI SIGNAL LOST' if player == 1 and self.settings.players == 1 else f'PRESS {effect.key} TO UNLOCK'
-                centered(panel_y + 14, message, INK, 1)
+                centered(panel_y + 14, message, text_color, 1)
         if self.effects.has(Effect.FLIP):
             if self._frame is None:
                 self._frame = pyxel.Image(WIDTH, HEIGHT)

@@ -1,6 +1,9 @@
 import pyxel
 
 from pong.settings import Difficulty
+from pong.music import load_match_music
+
+CHANNEL_GAINS = (0.09, 0.09, 0.07, 0.125)
 
 
 def load_audio() -> None:
@@ -19,6 +22,8 @@ def load_audio() -> None:
         pyxel.sounds[20 + i].set(notes, 't', '3', 'f', 30)
     pyxel.sounds[22].set('c0 r r r c0 r r r c0 r r r c0 r r r', 'n', '1', 'f', 30)
     pyxel.musics[0].set([16, 17, 18, 19], [20, 21, 20, 21], [22] * 4, [])
+
+    load_match_music()
 
     pyxel.sounds[0].set('c3 e3 g3 c4', 't', '4432', 'f', 9)
     pyxel.sounds[1].set('e2 g2 c3', 'p', '432', 'f', 8)
@@ -39,11 +44,14 @@ def play_difficulty(difficulty: Difficulty) -> None:
     pyxel.play(3, int(difficulty))
 
 
-def start_music() -> None:
-    pyxel.playm(0, loop=True)
+def start_music(difficulty: Difficulty | None = None) -> None:
+    for channel in range(3):
+        pyxel.stop(channel)
+    track = 0 if difficulty is None else int(difficulty) + 1
+    pyxel.playm(track, loop=True)
 
 
 def set_enabled(enabled: bool) -> None:
     # Muting the mixer preserves the current music position.
-    for channel in pyxel.channels:
-        channel.gain = 0.125 if enabled else 0.0
+    for channel, gain in zip(pyxel.channels, CHANNEL_GAINS):
+        channel.gain = gain if enabled else 0.0

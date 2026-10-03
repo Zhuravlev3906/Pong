@@ -9,6 +9,11 @@ INK = 7
 MUTED = 13
 ACCENT = 14
 TEXT = 6
+HELL_BACKGROUND = 3
+BLOOD = 4
+DARK_BLOOD = 5
+HELL_TEXT = 8
+HELL_MUTED = 9
 
 
 def configure_palette() -> None:
@@ -19,6 +24,11 @@ def configure_palette() -> None:
     pyxel.colors[TEXT] = 0x98989D
     pyxel.colors[1] = 0x212124
     pyxel.colors[2] = 0x39393D
+    pyxel.colors[HELL_BACKGROUND] = 0x210609
+    pyxel.colors[BLOOD] = 0xD32436
+    pyxel.colors[DARK_BLOOD] = 0x721522
+    pyxel.colors[HELL_TEXT] = 0xF0B2AB
+    pyxel.colors[HELL_MUTED] = 0xB87678
 
 
 @lru_cache(maxsize=64)
