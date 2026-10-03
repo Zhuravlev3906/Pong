@@ -28,6 +28,9 @@ def load_audio() -> None:
     pyxel.sounds[5].set('g2 c3', 't', '32', 'f', 6)
     pyxel.sounds[6].set('c3 e3 g3 c4', 'p', '4432', 'f', 7)
     pyxel.sounds[7].set('e3 c3', 't', '32', 'f', 6)
+    pyxel.sounds[8].set('c3 g3', 't', '43', 'ff', 3)
+    pyxel.sounds[9].set('g2', 'p', '2', 'f', 4)
+    pyxel.sounds[10].set('g2 e2 c2', 't', '432', 'fff', 10)
 
 
 def play_difficulty(difficulty: Difficulty) -> None:
