@@ -45,11 +45,12 @@ class PaddleAI:
         self.reaction_remaining = self.profile.reaction_time
 
     def update(self, paddle: Paddle, ball: Ball, dt: float, court: Rect,
-               paddle_bottom: float, serving: bool) -> None:
+               paddle_bottom: float, serving: bool, *, inverted: bool = False,
+               observing: bool = True) -> None:
         center = (court.left + court.right) / 2
         if serving:
             self.reset(center)
-        else:
+        elif observing:
             self.reaction_remaining -= dt
             if self.reaction_remaining <= 1e-9:
                 self.reaction_remaining = self.profile.reaction_time
@@ -68,4 +69,4 @@ class PaddleAI:
             stopping_distance += abs(paddle.velocity) * paddle.motion.input_delay
             if abs(difference) <= stopping_distance + dead_zone:
                 direction = 0
-        paddle.move(direction, dt, court.left, court.right)
+        paddle.move(-direction if inverted else direction, dt, court.left, court.right)

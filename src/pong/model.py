@@ -17,6 +17,11 @@ class Paddle:
     _direction: int = field(default=0, init=False, repr=False)
     _commands: deque[tuple[float, int]] = field(default_factory=deque, init=False, repr=False)
 
+    def reset_input(self) -> None:
+        self._commands.clear()
+        self._input = 0
+        self._direction = 0
+
     def move(self, direction: int, dt: float, minimum: float, maximum: float) -> None:
         if dt <= 0:
             return
