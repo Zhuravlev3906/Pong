@@ -1,2 +1,4 @@
 def main() -> None:
-    print("pong!")
+    from pong.app import App
+
+    App().run()

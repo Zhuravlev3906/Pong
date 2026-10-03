@@ -7,7 +7,9 @@ authors = [
     { name = "Zhuravlev3906", email = "zhuravlev3906@yandex.ru" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pyxel>=2.9.9",
+]
 
 [project.scripts]
 pong = "pong:main"
