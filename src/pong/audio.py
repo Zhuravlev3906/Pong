@@ -36,3 +36,9 @@ def play_difficulty(difficulty: Difficulty) -> None:
 
 def start_music() -> None:
     pyxel.playm(0, loop=True)
+
+
+def set_enabled(enabled: bool) -> None:
+    # Muting the mixer preserves the current music position.
+    for channel in pyxel.channels:
+        channel.gain = 0.125 if enabled else 0.0

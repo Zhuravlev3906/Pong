@@ -18,6 +18,7 @@ class App:
         configure_palette()
         audio.load_audio()
         self.settings = Settings()
+        audio.set_enabled(self.settings.sound_enabled)
         self.menu = Menu(self.settings)
         self.in_match = False
         audio.start_music()
@@ -26,6 +27,8 @@ class App:
         pyxel.run(self.update, self.draw)
 
     def update(self) -> None:
+        if pyxel.btnp(pyxel.KEY_M):
+            self.menu.toggle_sound()
         if self.in_match:
             if pyxel.btnp(pyxel.KEY_ESCAPE):
                 self.in_match = False
@@ -53,4 +56,5 @@ class App:
         centered(124, 'GAMEPLAY COMING NEXT', MUTED, 1)
         centered(305, self.settings.difficulty.name, MUTED)
         centered(326, '1 PLAYER / AI' if self.settings.players == 1 else '2 PLAYERS', MUTED, 1)
-        centered(376, 'ESC  BACK TO MENU', MUTED, 1)
+        centered(370, 'ESC  BACK TO MENU', MUTED, 1)
+        centered(382, 'M: SOUND ' + ('ON' if self.settings.sound_enabled else 'OFF'), MUTED, 1)

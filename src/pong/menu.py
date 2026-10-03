@@ -1,10 +1,9 @@
-import math
 from enum import IntEnum
 
 import pyxel
 
 from pong import audio
-from pong.graphics import ACCENT, BACKGROUND, INK, TEXT, MUTED, centered, frame, text
+from pong.graphics import ACCENT, BACKGROUND, INK, MUTED, TEXT, centered, frame, text
 from pong.settings import Difficulty, Settings
 
 DIFFICULTY_Y = (98, 118, 138, 158)
@@ -12,6 +11,13 @@ PLAYERS_HEADING_Y = 224
 PLAYERS_Y = 247
 PLAYER_OPTIONS = ((1, 65), (2, 169))
 START_RECT = (178, 307, 64, 23)
+SOUND_RECT = (205, 378, 60, 12)
+DIFFICULTY_DESCRIPTIONS = (
+    "RESPONSIVE / SLOW AI",
+    "LIGHT INERTIA / RISING SPEED",
+    "HEAVY INERTIA / PREDICTIVE AI",
+    "EXTREME SPEED / NO BRAKES",
+)
 
 
 class Focus(IntEnum):
@@ -25,9 +31,8 @@ class Menu:
         self.settings = settings
         self.focus = Focus.DIFFICULTY
         self.marker_y = float(DIFFICULTY_Y[settings.difficulty])
-        self.age = 0
         self.start_countdown = 0
-        self.mouse_position = (pyxel.mouse_x, pyxel.mouse_y)
+        self.hover_target: int | None = None
 
     def hit_target(self, x: int, y: int) -> int | None:
         for index, top in enumerate(DIFFICULTY_Y):
@@ -56,25 +61,35 @@ class Menu:
             self.start_countdown = 12
             pyxel.play(3, 6)
 
+    def toggle_sound(self) -> None:
+        self.settings.sound_enabled = not self.settings.sound_enabled
+        audio.set_enabled(self.settings.sound_enabled)
+
     def update(self) -> bool:
-        self.age += 1
         self.marker_y += (DIFFICULTY_Y[self.settings.difficulty] - self.marker_y) * 0.3
         if self.start_countdown:
             self.start_countdown -= 1
             return self.start_countdown == 0
 
-        mouse = (pyxel.mouse_x, pyxel.mouse_y)
-        target = self.hit_target(*mouse)
-        if mouse != self.mouse_position and target is not None:
-            self.focus = Focus.DIFFICULTY if target < 4 else (Focus.PLAYERS if target < 6 else Focus.START)
-        self.mouse_position = mouse
+        target = self.hit_target(pyxel.mouse_x, pyxel.mouse_y)
+        self.hover_target = target
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            x, y, width, height = SOUND_RECT
+            if x <= pyxel.mouse_x < x + width and y <= pyxel.mouse_y < y + height:
+                self.toggle_sound()
+                return False
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) and target is not None:
-            self.focus = Focus.DIFFICULTY if target < 4 else (Focus.PLAYERS if target < 6 else Focus.START)
+            self.focus = (
+                Focus.DIFFICULTY
+                if target < 4
+                else (Focus.PLAYERS if target < 6 else Focus.START)
+            )
             self.choose(target)
             return False
 
         if pyxel.btnp(pyxel.KEY_TAB):
-            self.focus = Focus((self.focus + 1) % len(Focus))
+            direction = -1 if pyxel.btn(pyxel.KEY_SHIFT) else 1
+            self.focus = Focus((self.focus + direction) % len(Focus))
             pyxel.play(3, 4)
         elif pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.KEY_SPACE):
             if self.focus == Focus.START:
@@ -98,30 +113,33 @@ class Menu:
         pyxel.cls(BACKGROUND)
         frame()
         text(55, 75, "Difficulty", INK)
+        if self.focus == Focus.DIFFICULTY:
+            text(45, 77, ">", INK, 1)
         selected = self.settings.difficulty
-        pulse = 1 + math.sin(self.age / 12) * 0.15
         marker_color = ACCENT if selected == Difficulty.EXTREME else INK
         pyxel.rect(55, round(self.marker_y), 9, 10, marker_color)
         for index, difficulty in enumerate(Difficulty):
             color = ACCENT if difficulty == Difficulty.EXTREME else TEXT
             label = difficulty.name if index == 3 else difficulty.name.title()
             text(69, DIFFICULTY_Y[index], label, color)
-            if self.focus == Focus.DIFFICULTY and difficulty == selected:
-                pyxel.line(
-                    69,
-                    DIFFICULTY_Y[index] + 14,
-                    69 + (len(label) * 4 - 1) * 2 * pulse - 4,
-                    DIFFICULTY_Y[index] + 14,
-                    MUTED,
-                )
+            if self.hover_target == index:
+                pyxel.line(69, DIFFICULTY_Y[index] + 14,
+                           69 + (len(label) * 4 - 1) * 2 - 1,
+                           DIFFICULTY_Y[index] + 14, MUTED)
 
+        text(55, 187, DIFFICULTY_DESCRIPTIONS[selected], MUTED, 1)
         centered(PLAYERS_HEADING_Y, "Players", INK)
+        if self.focus == Focus.PLAYERS:
+            text(113, PLAYERS_HEADING_Y + 2, ">", INK, 1)
         for players, x in PLAYER_OPTIONS:
-            text(x, PLAYERS_Y, f"{players} player" + ("s" if players == 2 else ""), TEXT)
+            text(
+                x, PLAYERS_Y, f"{players} player" + ("s" if players == 2 else ""), TEXT
+            )
             if players == self.settings.players:
                 pyxel.rect(x, PLAYERS_Y + 18, 12, 2, INK)
-            if self.focus == Focus.PLAYERS and players == self.settings.players:
-                text(x - 9, PLAYERS_Y + 2, ">", MUTED, scale=1)
+            if self.hover_target == players + 3:
+                width = (len(f"{players} player" + ("s" if players == 2 else "")) * 4 - 1) * 2
+                pyxel.line(x, PLAYERS_Y + 14, x + width - 1, PLAYERS_Y + 14, MUTED)
 
         x, y, width, height = START_RECT
         pressed = bool(self.start_countdown)
@@ -129,6 +147,17 @@ class Menu:
         offset = 3 if pressed else 0
         pyxel.rect(x + offset, y + offset, width, height, BACKGROUND)
         pyxel.rectb(x + offset, y + offset, width, height, INK)
+        if self.hover_target == 6 and not pressed:
+            pyxel.rect(x + 1, y + 1, width - 2, height - 2, 1)
         text(x + 12 + offset, y + 6 + offset, "START", INK)
         if self.focus == Focus.START and not pressed:
             text(x - 10, y + 8, ">", INK, 1)
+
+        hints = (
+            "UP/DOWN: CHANGE   ENTER: NEXT",
+            "LEFT/RIGHT: CHANGE   ENTER: NEXT",
+            "ENTER: START",
+        )
+        centered(366, hints[self.focus], TEXT, 1)
+        text(36, 382, "TAB: NEXT  SHIFT+TAB: BACK", MUTED, 1)
+        text(211, 382, "M: SOUND " + ("ON" if self.settings.sound_enabled else "OFF"), TEXT, 1)

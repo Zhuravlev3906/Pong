@@ -18,3 +18,4 @@ class Difficulty(IntEnum):
 class Settings:
     difficulty: Difficulty = Difficulty.MEDIUM
     players: int = 1
+    sound_enabled: bool = True
